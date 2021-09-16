@@ -9,6 +9,7 @@ var server = http.Server(app);
 var io = socket_io(server);
 
 var users = [];
+var userHost;
 var userPoints = {};
 
 var words = [
@@ -49,6 +50,11 @@ io.on('connection', function (socket) {
 
 		Object.assign(userPoints, data.userPoints);
 		// if the user is first to join OR 'drawer' room has no connections
+		if(users.length == 1)
+		{
+			userHost = socket.username;
+			io.in(socket.username).emit('new host');
+		}
 		if (users.length == 1 || typeof io.sockets.adapter.rooms['drawer'] === 'undefined') {
 
 			// place user into 'drawer' room
@@ -101,6 +107,12 @@ io.on('connection', function (socket) {
 			};
 		};
 		users.sort();
+		if(userHost == socket.username && users.length>0)
+		{
+			var x = Math.floor(Math.random() * (users.length));
+			userHost = users[x];
+			io.in(users[x]).emit('new host');
+		}
 		console.log("Users: ", users);
 		console.log(socket.username + ' has disconnected.');
 
@@ -147,6 +159,13 @@ io.on('connection', function (socket) {
 			{
 				io.in(users[i]).emit('reverse show Completed', users[i]);
 			}
+		}
+	})
+
+	socket.on('game stop', function(){
+		for(var i = 0;i < users.length; i++)
+		{
+			io.in(users[i]).emit('stop the game');
 		}
 	})
 
