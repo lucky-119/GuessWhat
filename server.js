@@ -7,7 +7,7 @@ app.use(express.static('public'));
 
 var server = http.Server(app);
 var io = socket_io(server);
-
+var userHost;
 var users = [];
 var userHost;
 var userPoints = {};
@@ -49,6 +49,12 @@ io.on('connection', function (socket) {
 		users.sort();
 
 		Object.assign(userPoints, data.userPoints);
+
+		if(users.length == 1)
+		{
+			userHost = socket.username;
+			io.in(socket.username).emit('new host');
+		}
 		// if the user is first to join OR 'drawer' room has no connections
 		if(users.length == 1)
 		{
@@ -149,6 +155,8 @@ io.on('connection', function (socket) {
 	});
 
 	socket.on('completed user', function(data){
+		
+		userPoints[data.to] = data.firstUser ? userPoints[data.to]+2: userPoints[data.to]+1;
 		io.in(data.to).emit('show Completed', data.to);
 	})
 
@@ -159,6 +167,14 @@ io.on('connection', function (socket) {
 			{
 				io.in(users[i]).emit('reverse show Completed', users[i]);
 			}
+		}
+		io.emit('correct answer', {username: data.username, guessword: data.guessword, names: users, userPoints: userPoints});
+	})
+
+	socket.on('game stop', function(){
+		for(var i = 0;i < users.length; i++)
+		{
+			io.in(users[i]).emit('stop the game');
 		}
 	})
 
