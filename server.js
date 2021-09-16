@@ -7,7 +7,7 @@ app.use(express.static('public'));
 
 var server = http.Server(app);
 var io = socket_io(server);
-
+var userHost;
 var users = [];
 var userPoints = {};
 
@@ -48,6 +48,12 @@ io.on('connection', function (socket) {
 		users.sort();
 
 		Object.assign(userPoints, data.userPoints);
+
+		if(users.length == 1)
+		{
+			userHost = socket.username;
+			io.in(socket.username).emit('new host');
+		}
 		// if the user is first to join OR 'drawer' room has no connections
 		if (users.length == 1 || typeof io.sockets.adapter.rooms['drawer'] === 'undefined') {
 
@@ -101,6 +107,12 @@ io.on('connection', function (socket) {
 			};
 		};
 		users.sort();
+		if(userHost == socket.username && users.length>0)
+		{
+			var x = Math.floor(Math.random() * (users.length));
+			userHost = users[x];
+			io.in(users[x]).emit('new host');
+		}
 		console.log("Users: ", users);
 		console.log(socket.username + ' has disconnected.');
 
@@ -151,6 +163,13 @@ io.on('connection', function (socket) {
 			}
 		}
 		io.emit('correct answer', {username: data.username, guessword: data.guessword, names: users, userPoints: userPoints});
+	})
+
+	socket.on('game stop', function(){
+		for(var i = 0;i < users.length; i++)
+		{
+			io.in(users[i]).emit('stop the game');
+		}
 	})
 
 	socket.on('show Guess Word', function(data){
