@@ -85,13 +85,15 @@ var showGuessWord = function(data){
 }
 
 var guessword = function(data){
-    if(click==true && data.guessword != $('span.word').text())
+    var firstUser = false;
+    if(data.guessword != $('span.word').text())
     {
         socket.emit('show Guess Word', data);
     }
     else if(click == true && data.guessword == $('span.word').text() && userSuccessCount+2<users.length)
     {
-        socket.emit('completed user', {from: user, to: data.username});
+        firstUser = userSuccessCount === 0 ? true : false;
+        socket.emit('completed user', {from: user, to: data.username, firstUser: firstUser});
         userSuccessCount+=1;
         return;
     }
@@ -143,7 +145,7 @@ var guessword = function(data){
 }
 
 function resetCounter(){
-    counter = 60;
+    counter =60;
     $('#timer').hide();
 }
 
