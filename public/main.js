@@ -70,6 +70,21 @@ var guesser = function() {
     });
 };
 
+var newHost = function() {
+    $('#stopGame').show();
+}
+
+var stopTheGame = function() {
+    clearInterval(Interval);
+    $('#guess').hide();
+    $('#completed').hide();
+}
+
+    $('#stopGame').on('click', function(){
+        clearInterval(Interval);
+        socket.emit('game stop');
+    })
+
 var showCompleted = function(data){
     $('#guess').hide();
     $('#completed').show();
@@ -110,8 +125,8 @@ var guessword = function(data){
                 index = (i+1)%users.length;
             }
         }
-        clearInterval(Interval);
         resetCounter();
+        clearInterval(Interval);
         socket.emit('swap rooms', {from: user, to: users[index]});
         click = false;
     }
@@ -291,5 +306,7 @@ $(document).ready(function() {
     socket.on('show Completed', showCompleted);
     socket.on('reverse show Completed', reverseShowCompleted);
     socket.on('show guesses', showGuessWord);
+    socket.on('stop the game', stopTheGame);
+    socket.on('new host', newHost);
 
 });
